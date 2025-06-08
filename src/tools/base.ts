@@ -1,6 +1,6 @@
 import z from 'zod'
 
-const tableName='personal_annalist'
+const tableName = 'personal_annalist'
 
 export const record = {
   name: 'record_personal_thought',
@@ -86,47 +86,64 @@ export const query = {
   name: 'query_personal_annalist',
   description: `通过自定义SQL语句查询个人编年史数据库 ${tableName} 表,关键字段为 core_topic, date_time, thought_content, thought_type, emotion_tags, related_context`,
   schema: {
-    sql: z.string().describe('要执行的SQL查询语句，只允许安全的SELECT查询，不允许执行删除、修改等操作。')
+    sql: z
+      .string()
+      .describe(
+        '要执行的SQL查询语句，只允许安全的SELECT查询，不允许执行删除、修改等操作。'
+      )
   },
   handler: async (args: any, client: any, sendNotification: any) => {
     const { createDatabase } = client
     const currentDb = await createDatabase(globalThis.databasePath)
-    try {
-      const forbidden = /\b(delete|drop|update|insert|alter|truncate)\b/i
-      if (!/^\s*select\b/i.test(args.sql) || forbidden.test(args.sql)) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: '只允许安全的SELECT查询，不允许执行删除、修改等操作。'
-            }
-          ]
-        }
+
+    const forbidden = /\b(delete|drop|update|insert|alter|truncate)\b/i
+    if (!/^\s*select\b/i.test(args.sql) || forbidden.test(args.sql)) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: '只允许安全的SELECT查询，不允许执行删除、修改等操作。'
+          }
+        ]
       }
+    }
+
+    let result = [],
+      errorInfo: string = ''
+    try {
       const stmt = currentDb.prepare(args.sql)
-      const result = []
+
       while (stmt.step()) {
         result.push(stmt.getAsObject())
       }
       stmt.free()
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `查询结果: ${JSON.stringify(result)}`
-          }
-        ]
+    } catch (error: any) {
+      errorInfo = error.message
+    }
+
+    // 获取所有表的结构信息
+    const sql2 = `SELECT name AS table_name, sql FROM sqlite_master WHERE type = 'table'`
+    const result2 = []
+    try {
+      const stmt2 = currentDb.prepare(sql2)
+      while (stmt2.step()) {
+        let table = stmt2.getAsObject()
+        if (table.name !== 'sqlite_sequence') {
+          result2.push(table)
+        }
       }
-    } catch (e) {
-      const err = e as Error
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `SQL执行出错: ${err.message}`
-          }
-        ]
-      }
+      stmt2.free()
+    } catch (error) {}
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `查询结果: ${JSON.stringify(result)},所有表: ${JSON.stringify(
+            result2
+          )}${errorInfo ? `,SQL执行出错: ${errorInfo}` : ''}`
+        }
+      ]
     }
   }
 }
