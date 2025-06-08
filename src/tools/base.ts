@@ -84,7 +84,7 @@ export const record = {
 
 export const query = {
   name: 'query_personal_annalist',
-  description: `通过自定义SQL语句查询个人编年史数据库 ${tableName} 表`,
+  description: `通过自定义SQL语句查询个人编年史数据库 ${tableName} 表,关键字段为 core_topic, date_time, thought_content, thought_type, emotion_tags, related_context`,
   schema: {
     sql: z.string().describe('要执行的SQL查询语句，只允许安全的SELECT查询，不允许执行删除、修改等操作。')
   },
