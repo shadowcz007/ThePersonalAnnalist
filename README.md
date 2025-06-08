@@ -26,3 +26,8 @@
 **Emotion Tags**: Certain, Anxious  
 **Related Context**: "MIT Tech Review article on bias audits"  
 ```
+
+## 如何使用？
+```
+mcp_server.exe --mcp-js dist\ThePersonalAnnalist.cjs --database-path dist\test.sqlite
+```

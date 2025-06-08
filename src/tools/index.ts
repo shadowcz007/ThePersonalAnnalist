@@ -1,5 +1,6 @@
-import { callPersonalAnnalist } from "./base"; 
+import { record,query } from "./base"; 
 export const tools:any = {
-    callPersonalAnnalist
+    record,
+    query
 };
 
