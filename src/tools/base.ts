@@ -104,7 +104,10 @@ export const query = {
         }
       }
       const stmt = currentDb.prepare(args.sql)
-      const result = stmt.all()
+      const result = []
+      while (stmt.step()) {
+        result.push(stmt.getAsObject())
+      }
       stmt.free()
       return {
         content: [
