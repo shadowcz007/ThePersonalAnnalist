@@ -87,15 +87,15 @@ export function configureMcp (
   // console.log('server._exe_tools',server._exe_tools)
   // server._sendLoggingMessage
   try {
-    for (const key in tools) {
-      let tool = tools[key]
+    for (const tool of tools) {
       // 添加一个简单的测试工具
       console.log(`🔧 [CONFIG] Registering ${tool.name} tool...`)
 
       server?.tool(
         tool.name,
         tool.description,
-        tool.schema,
+        // @ts-ignore
+        z._fieldsToZodSchema(tool.fields,false),
         (args: any, e: any) => {
           const sendNotification = e?.sendNotification || (() => {})
           return tool.handler(args, server._client, sendNotification)

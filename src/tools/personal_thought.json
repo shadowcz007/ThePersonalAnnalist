@@ -1,0 +1,50 @@
+{
+    "name": "personal_thought",
+    "description": "个人编年史记录，快速捕捉核心思想，轻量化记录",
+    "fields": [
+        {
+            "name": "core_topic",
+            "type": "string",
+            "isOptional": false,
+            "description": "用1-5个关键词概括思考的核心主题（如\"AI伦理\" \"创业决策\" \"存在主义反思\"）"
+        },
+        {
+            "name": "thought_content",
+            "type": "string",
+            "isOptional": false,
+            "description": "思考内容，观点、推理过程、结论"
+        },
+        {
+            "name": "thought_type",
+            "type": "enum",
+            "options": [
+                "Inspiration",
+                "Judgment",
+                "Reflection",
+                "Question",
+                "Hypothesis"
+            ],
+            "isOptional": false,
+            "description": "记录思考的类型：Inspiration, Judgment, Reflection, Question, Hypothesis"
+        },
+        {
+            "name": "emotion_tags",
+            "type": "enum",
+            "options": [
+                "Confused",
+                "Certain",
+                "Excited",
+                "Anxious",
+                "Calm"
+            ],
+            "isOptional": false,
+            "description": "情绪标记,辅助回溯思考状态，Confused, Certain, Excited, Anxious, Calm"
+        },
+        {
+            "name": "related_context",
+            "type": "string",
+            "isOptional": false,
+            "description": "关联人物/事件,触发此次思考的外部关联（如\"读《人类简史》P120\" \"与XX的辩论\"）"
+        }
+    ]
+}

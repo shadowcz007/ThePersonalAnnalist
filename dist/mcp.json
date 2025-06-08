@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+      
+    },
+    "serverInfo": {
+        "serverName": "The Personal Annalist", 
+        "version": "0.2.0",
+        "description": "个人编年史记录，快速捕捉核心思想，轻量化记录",
+        "author": "shadow"
+    }
+}
