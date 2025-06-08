@@ -1,5 +1,7 @@
 import z from 'zod'
 
+const tableName='personal_annalist'
+
 export const record = {
   name: 'record_personal_thought',
   description: '个人编年史官，快速捕捉核心思想，轻量化记录',
@@ -37,7 +39,7 @@ export const record = {
     const currentDb = await createDatabase(globalThis.databasePath)
 
     // 确保personal_annalist表存在
-    currentDb.run(`CREATE TABLE IF NOT EXISTS personal_annalist (
+    currentDb.run(`CREATE TABLE IF NOT EXISTS ${tableName} (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       core_topic TEXT,
       date_time TEXT,
@@ -56,7 +58,7 @@ export const record = {
     } = args
 
     const stmt = currentDb.prepare(
-      'INSERT INTO personal_annalist (core_topic, date_time, thought_content, thought_type, emotion_tags, related_context) VALUES ($core_topic, $date_time, $thought_content, $thought_type, $emotion_tags, $related_context)'
+      `INSERT INTO ${tableName} (core_topic, date_time, thought_content, thought_type, emotion_tags, related_context) VALUES ($core_topic, $date_time, $thought_content, $thought_type, $emotion_tags, $related_context)`
     )
     stmt.run({
       $core_topic: core_topic,
@@ -82,9 +84,9 @@ export const record = {
 
 export const query = {
   name: 'query_personal_annalist',
-  description: '通过自定义SQL语句查询个人编年史数据库',
+  description: `通过自定义SQL语句查询个人编年史数据库 ${tableName} 表`,
   schema: {
-    sql: z.string().describe('要执行的SQL查询语句')
+    sql: z.string().describe('要执行的SQL查询语句，只允许安全的SELECT查询，不允许执行删除、修改等操作。')
   },
   handler: async (args: any, client: any, sendNotification: any) => {
     const { createDatabase } = client
