@@ -1,3 +1,5 @@
+这是一个[mcp-plugin](https://www.npmjs.com/package/mcp-plugin)的项目，需配合[mcp-server-exe](https://github.com/shadowcz007/mcp_server_exe)使用。
+
 # The Personal Annalist
 旨在为用户构建一部深度、结构化、可回溯的个人思想传记
 
@@ -16,3 +18,11 @@
 
 > **特点**：极简高效，5分钟内完成记录，适合碎片化思考捕捉。
 
+```
+**Date & Time**: 2025-06-08 14:30  
+**Core Topic**: AI Bias, Fairness  
+**Thought Content**: "Current LLMs amplify stereotypes because... [reasoning]... Solution: adversarial training."  
+**Thought Type**: Judgment  
+**Emotion Tags**: Certain, Anxious  
+**Related Context**: "MIT Tech Review article on bias audits"  
+```
