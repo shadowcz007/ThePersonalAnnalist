@@ -29,5 +29,5 @@
 
 ## 如何使用？
 ```
-mcp_server.exe --mcp-js dist\ThePersonalAnnalist.cjs --database-path dist\test.sqlite
+mcp_server.exe --mcp-js dist\ThePersonalAnnalist.cjs --mcp-config dist\mcp.json --database-path dist\test.sqlite
 ```
