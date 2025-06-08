@@ -1,2 +1,2 @@
-# ThePersonalAnnalist
-The Personal Annalist 个人编年史官 ——为个人提供专属、智能、有深度的生命轨迹与知识记录
+# The Personal Annalist
+为个人打造深度、智能、可转化为传记的生命轨迹与技能成长记录系统
