@@ -9,4 +9,10 @@ interface Field {
     name: string
     description: string
     fields: Field[]
+    tools: {
+        [key: string]: {
+            active: boolean
+            syncToBackend: boolean
+        }
+    }
   }

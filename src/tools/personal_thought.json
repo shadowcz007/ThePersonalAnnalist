@@ -46,5 +46,19 @@
             "isOptional": false,
             "description": "关联人物/事件,触发此次思考的外部关联（如\"读《人类简史》P120\" \"与XX的辩论\"）"
         }
-    ]
+    ],
+    "tools":{
+        "query":{
+            "active":true,
+            "syncToBackend":true
+        },
+        "record":{
+            "active":true,
+            "syncToBackend":true
+        },
+        "update":{
+            "active":true,
+            "syncToBackend":true
+        }
+    }
 }
