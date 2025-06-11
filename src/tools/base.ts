@@ -22,13 +22,13 @@ const BASE_FIELDS_CONFIG = [
   },
   {
     name: 'create_time',
-    type: 'string',
+    type: 'datetime',
     isOptional: false,
     description: '创建时间'
   },
   {
     name: 'update_time',
-    type: 'string',
+    type: 'datetime',
     isOptional: false,
     description: '更新时间'
   }
@@ -115,7 +115,20 @@ export const createTool = (config: ToolDefinition) => {
 
   // 动态生成表字段
   const fieldNames = fields.map(f => f.name)
-  const fieldDefs = fields.map(f => `${f.name} TEXT`).join(',\n        ')
+  const fieldDefs = fields.map(f => {
+    switch(f.type) {
+        case 'string':
+            return `${f.name} TEXT`;
+        case 'number':
+            return `${f.name} REAL`;
+        case 'boolean':
+            return `${f.name} INTEGER`;
+        case 'datetime':
+            return `${f.name} DATETIME`;
+        default:
+            return `${f.name} TEXT`;
+    }
+}).join(',\n        ');
 
   const fieldPlaceholders = fields.map(f => `$${f.name}`).join(', ')
   const fieldInsertNames = fields.map(f => f.name).join(', ')
