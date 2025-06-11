@@ -49,7 +49,7 @@ const syncToBackend = async (
       [TOOLS_PREFIX.RECORD]: `${BASE_URL}/${tableName}/${TOOLS_PREFIX.RECORD}`
     }
 
-    const endpoint = endpoints[operation]
+    let endpoint = endpoints[operation]
     if (!endpoint) {
       throw new Error(`未知的操作类型: ${operation}`)
     }
@@ -68,18 +68,16 @@ const syncToBackend = async (
     const options: RequestInit = {
       method:
         operation === TOOLS_PREFIX.QUERY
-          ? 'GET'
+          ? 'POST'
           : operation === TOOLS_PREFIX.UPDATE
           ? 'PUT'
           : 'POST',
       headers: {
         'Content-Type': 'application/json'
-      },
-      body:
-        operation !== TOOLS_PREFIX.QUERY
-          ? JSON.stringify(requestData)
-          : undefined
+      }
     }
+
+    options.body = JSON.stringify(requestData)
 
     const response = await fetch(endpoint, options)
 
@@ -123,7 +121,7 @@ export const createTool = (config: ToolDefinition) => {
   const fieldInsertNames = fields.map(f => f.name).join(', ')
   const fieldInsertParams = fields.reduce((acc, f) => {
     let value =
-      BASE_FIELDS_CONFIG.find(c => c.name === f.name)?.defaultValue || undefined
+      BASE_FIELDS_CONFIG.find(c => c.name === f.name)?.defaultValue || ""
 
     acc[`$${f.name}`] = value
     return acc
