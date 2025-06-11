@@ -10,13 +10,15 @@ const BASE_FIELDS_CONFIG = [
     name: 'user_id',
     type: 'string',
     isOptional: false,
-    description: '用户ID'
+    description: '用户ID',
+    defaultValue: globalThis.userId
   },
   {
     name: 'device_id',
     type: 'string',
     isOptional: false,
-    description: '设备ID'
+    description: '设备ID',
+    defaultValue: globalThis.deviceId
   },
   {
     name: 'create_time',
@@ -33,13 +35,17 @@ const BASE_FIELDS_CONFIG = [
 ]
 
 // 同步到后端的函数
-const syncToBackend = async (operation: string, data: any) => {
+const syncToBackend = async (
+  operation: string,
+  tableName: string,
+  data: any
+) => {
   try {
     const BASE_URL = 'http://localhost:3003/api'
     const endpoints = {
-      [TOOLS_PREFIX.QUERY]: `${BASE_URL}/${TOOLS_PREFIX.QUERY}`,
-      [TOOLS_PREFIX.UPDATE]: `${BASE_URL}/${TOOLS_PREFIX.UPDATE}`,
-      [TOOLS_PREFIX.RECORD]: `${BASE_URL}/${TOOLS_PREFIX.RECORD}`
+      [TOOLS_PREFIX.QUERY]: `${BASE_URL}/${tableName}/${TOOLS_PREFIX.QUERY}`,
+      [TOOLS_PREFIX.UPDATE]: `${BASE_URL}/${tableName}/${TOOLS_PREFIX.UPDATE}`,
+      [TOOLS_PREFIX.RECORD]: `${BASE_URL}/${tableName}/${TOOLS_PREFIX.RECORD}`
     }
 
     const endpoint = endpoints[operation]
@@ -101,7 +107,10 @@ export const createTool = (config: ToolDefinition) => {
   const fieldPlaceholders = fields.map(f => `$${f.name}`).join(', ')
   const fieldInsertNames = fields.map(f => f.name).join(', ')
   const fieldInsertParams = fields.reduce((acc, f) => {
-    acc[`$${f.name}`] = undefined
+    let value =
+      BASE_FIELDS_CONFIG.find(c => c.name === f.name)?.defaultValue || undefined
+
+    acc[`$${f.name}`] = value
     return acc
   }, {} as Record<string, any>)
 
@@ -119,9 +128,13 @@ export const createTool = (config: ToolDefinition) => {
         const { createDatabase } = client
         const currentDb = await initDB(tableName, fieldDefs, createDatabase)
 
-        const insertParams = { ...fieldInsertParams }
+        const insertParams: any = {
+          ...fieldInsertParams,
+          create_time: new Date().toISOString(),
+          update_time: new Date().toISOString()
+        }
         for (const key of fieldNames) {
-          insertParams[`$${key}`] = args[key]
+          insertParams[`$${key}`] = args[key] || insertParams[`$${key}`]
         }
 
         const stmt = currentDb.prepare(
@@ -135,7 +148,7 @@ export const createTool = (config: ToolDefinition) => {
 
         // 如果配置了同步，则同步到后端
         if (tools[TOOLS_PREFIX.RECORD].syncToBackend) {
-          await syncToBackend(TOOLS_PREFIX.RECORD, insertParams)
+          await syncToBackend(TOOLS_PREFIX.RECORD, tableName, insertParams)
         }
 
         return {
@@ -160,12 +173,6 @@ export const createTool = (config: ToolDefinition) => {
         const { createDatabase } = client
         const currentDb = await initDB(tableName, fieldDefs, createDatabase)
 
-        // 确保表存在
-        currentDb.run(`CREATE TABLE IF NOT EXISTS ${tableName} (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          ${fieldDefs}
-        )`)
-
         // 检查记录是否存在
         const checkStmt = currentDb.prepare(
           `SELECT COUNT(*) as count FROM ${tableName}`
@@ -173,13 +180,17 @@ export const createTool = (config: ToolDefinition) => {
         const result = checkStmt.getAsObject()
         checkStmt.free()
 
-        const updateParams = { ...fieldInsertParams }
+        const updateParams: any = {
+          ...fieldInsertParams,
+          update_time: new Date().toISOString()
+        }
         for (const key of fieldNames) {
-          updateParams[`$${key}`] = args[key]
+          updateParams[`$${key}`] = args[key] || updateParams[`$${key}`]
         }
 
         if (result.count === 0) {
           // 如果不存在记录，则插入
+          updateParams['create_time'] = new Date().toISOString()
           const insertStmt = currentDb.prepare(
             `INSERT INTO ${tableName} (${fieldNames.join(
               ', '
@@ -202,7 +213,7 @@ export const createTool = (config: ToolDefinition) => {
 
         // 如果配置了同步，则同步到后端
         if (tools[TOOLS_PREFIX.UPDATE].syncToBackend) {
-          await syncToBackend(TOOLS_PREFIX.UPDATE, updateParams)
+          await syncToBackend(TOOLS_PREFIX.UPDATE, tableName, updateParams)
         }
 
         return {
@@ -238,7 +249,7 @@ export const createTool = (config: ToolDefinition) => {
 
         // 如果配置了同步，先从后端获取数据
         if (tools[TOOLS_PREFIX.QUERY].syncToBackend) {
-          await syncToBackend(TOOLS_PREFIX.QUERY, {})
+          await syncToBackend(TOOLS_PREFIX.QUERY, tableName, {})
         }
 
         const forbidden = /\b(delete|drop|update|insert|alter|truncate)\b/i

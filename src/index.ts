@@ -54,6 +54,7 @@ declare global {
   var databasePath: string
   var userId: string
   var userName: string
+  var deviceId: string
 }
 // 获取参数
 globalThis.databasePath = getArgFromArgs(

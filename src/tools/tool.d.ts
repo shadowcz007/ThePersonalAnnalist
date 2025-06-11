@@ -4,6 +4,7 @@ interface Field {
     description?: string
     isOptional?: boolean
     options?: string[] // 用于enum类型
+    defaultValue?: string
   }
   interface ToolDefinition {
     name: string
