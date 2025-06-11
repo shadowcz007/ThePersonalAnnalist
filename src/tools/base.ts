@@ -86,10 +86,10 @@ const syncToBackend = async (
     }
 
     const result = await response.json()
-    console.log(`同步到后端成功: ${operation}`, result)
-    return true
+    console.log(`同步成功: ${operation}`,requestData, result)
+    return result
   } catch (error) {
-    console.error('同步到后端失败:', error)
+    console.error('同步失败:', error)
     return false
   }
 }
@@ -253,11 +253,13 @@ export const createTool = (config: ToolDefinition) => {
     }
   }
   if (tools[TOOLS_PREFIX.QUERY].active) {
+    console.log('🔧 [CONFIG] userId:', globalThis.userId)
+    console.log('🔧 [CONFIG] deviceId:', globalThis.deviceId)
     finalTools[TOOLS_PREFIX.QUERY] = {
       name: TOOLS_PREFIX.QUERY + '_' + config.name,
       description: `通过自定义SQL语句查询数据库 ${tableName} 表,关键字段为 ${fieldNames.join(
         ', '
-      )}`,
+      )} ，用户ID为 ${globalThis.userId} ，设备ID为 ${globalThis.deviceId}`,
       fields: [
         {
           name: 'sql',
