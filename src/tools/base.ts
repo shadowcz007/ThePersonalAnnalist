@@ -4,16 +4,70 @@ const TOOLS_PREFIX = {
   RECORD: 'record'
 }
 
+//数据库基础字段：user_id , device_id , create_time , update_time,
+const BASE_FIELDS_CONFIG = [
+  {
+    name: 'user_id',
+    type: 'string',
+    isOptional: false,
+    description: '用户ID'
+  },
+  {
+    name: 'device_id',
+    type: 'string',
+    isOptional: false,
+    description: '设备ID'
+  },
+  {
+    name: 'create_time',
+    type: 'string',
+    isOptional: false,
+    description: '创建时间'
+  },
+  {
+    name: 'update_time',
+    type: 'string',
+    isOptional: false,
+    description: '更新时间'
+  }
+]
+
 // 同步到后端的函数
 const syncToBackend = async (operation: string, data: any) => {
   try {
-    // TODO: 实现实际的API调用
-    const mockApi = {
-      [TOOLS_PREFIX.QUERY]: `GET /api/${TOOLS_PREFIX.QUERY}`,
-      [TOOLS_PREFIX.UPDATE]: `PUT /api/${TOOLS_PREFIX.UPDATE}`,
-      [TOOLS_PREFIX.RECORD]: `POST /api/${TOOLS_PREFIX.RECORD}`
+    const BASE_URL = 'http://localhost:3003/api'
+    const endpoints = {
+      [TOOLS_PREFIX.QUERY]: `${BASE_URL}/${TOOLS_PREFIX.QUERY}`,
+      [TOOLS_PREFIX.UPDATE]: `${BASE_URL}/${TOOLS_PREFIX.UPDATE}`,
+      [TOOLS_PREFIX.RECORD]: `${BASE_URL}/${TOOLS_PREFIX.RECORD}`
     }
-    console.log(`同步到后端: ${mockApi[operation]}`, data)
+
+    const endpoint = endpoints[operation]
+    if (!endpoint) {
+      throw new Error(`未知的操作类型: ${operation}`)
+    }
+
+    const options: RequestInit = {
+      method:
+        operation === TOOLS_PREFIX.QUERY
+          ? 'GET'
+          : operation === TOOLS_PREFIX.UPDATE
+          ? 'PUT'
+          : 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: operation !== TOOLS_PREFIX.QUERY ? JSON.stringify(data) : undefined
+    }
+
+    const response = await fetch(endpoint, options)
+
+    if (!response.ok) {
+      throw new Error(`HTTP错误: ${response.status}`)
+    }
+
+    const result = await response.json()
+    console.log(`同步到后端成功: ${operation}`, result)
     return true
   } catch (error) {
     console.error('同步到后端失败:', error)
@@ -21,15 +75,32 @@ const syncToBackend = async (operation: string, data: any) => {
   }
 }
 
+const initDB = async (
+  tableName: string,
+  fieldDefs: string,
+  createDatabase: any
+) => {
+  const currentDb = await createDatabase(globalThis.databasePath)
+
+  currentDb.run(`CREATE TABLE IF NOT EXISTS ${tableName} (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${fieldDefs}
+  )`)
+  return currentDb
+}
+
 export const createTool = (config: ToolDefinition) => {
   const tableName = config.name
 
+  const fields = [...BASE_FIELDS_CONFIG, ...config.fields]
+
   // 动态生成表字段
-  const fieldNames = config.fields.map(f => f.name)
-  const fieldDefs = config.fields.map(f => `${f.name} TEXT`).join(',\n        ')
-  const fieldPlaceholders = config.fields.map(f => `$${f.name}`).join(', ')
-  const fieldInsertNames = config.fields.map(f => f.name).join(', ')
-  const fieldInsertParams = config.fields.reduce((acc, f) => {
+  const fieldNames = fields.map(f => f.name)
+  const fieldDefs = fields.map(f => `${f.name} TEXT`).join(',\n        ')
+
+  const fieldPlaceholders = fields.map(f => `$${f.name}`).join(', ')
+  const fieldInsertNames = fields.map(f => f.name).join(', ')
+  const fieldInsertParams = fields.reduce((acc, f) => {
     acc[`$${f.name}`] = undefined
     return acc
   }, {} as Record<string, any>)
@@ -42,16 +113,11 @@ export const createTool = (config: ToolDefinition) => {
     finalTools[TOOLS_PREFIX.RECORD] = {
       name: TOOLS_PREFIX.RECORD + '_' + config.name,
       description: config.description,
-      fields: [...config.fields],
+      fields: [...fields],
       handler: async (args: any, client: any, sendNotification: any) => {
         console.log('工具参数:', args)
         const { createDatabase } = client
-        const currentDb = await createDatabase(globalThis.databasePath)
-
-        currentDb.run(`CREATE TABLE IF NOT EXISTS ${tableName} (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          ${fieldDefs}
-        )`)
+        const currentDb = await initDB(tableName, fieldDefs, createDatabase)
 
         const insertParams = { ...fieldInsertParams }
         for (const key of fieldNames) {
@@ -89,10 +155,10 @@ export const createTool = (config: ToolDefinition) => {
     finalTools[TOOLS_PREFIX.UPDATE] = {
       name: TOOLS_PREFIX.UPDATE + '_' + config.name,
       description: `更新或创建 ${tableName} 表中的记录`,
-      fields: [...config.fields],
+      fields: [...fields],
       handler: async (args: any, client: any, sendNotification: any) => {
         const { createDatabase } = client
-        const currentDb = await createDatabase(globalThis.databasePath)
+        const currentDb = await initDB(tableName, fieldDefs, createDatabase)
 
         // 确保表存在
         currentDb.run(`CREATE TABLE IF NOT EXISTS ${tableName} (
@@ -168,7 +234,7 @@ export const createTool = (config: ToolDefinition) => {
       ],
       handler: async (args: any, client: any, sendNotification: any) => {
         const { createDatabase } = client
-        const currentDb = await createDatabase(globalThis.databasePath)
+        const currentDb = await initDB(tableName, fieldDefs, createDatabase)
 
         // 如果配置了同步，先从后端获取数据
         if (tools[TOOLS_PREFIX.QUERY].syncToBackend) {
