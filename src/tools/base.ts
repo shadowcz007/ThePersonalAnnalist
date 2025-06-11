@@ -38,6 +38,7 @@ const BASE_FIELDS_CONFIG = [
 const syncToBackend = async (
   operation: string,
   tableName: string,
+  fieldDefs: any,
   data: any
 ) => {
   try {
@@ -53,6 +54,17 @@ const syncToBackend = async (
       throw new Error(`未知的操作类型: ${operation}`)
     }
 
+    // 获取表结构信息
+    const tableStructure = {
+      tableName,
+      fieldDefs
+    }
+
+    const requestData = {
+      data,
+      tableStructure
+    }
+
     const options: RequestInit = {
       method:
         operation === TOOLS_PREFIX.QUERY
@@ -63,7 +75,10 @@ const syncToBackend = async (
       headers: {
         'Content-Type': 'application/json'
       },
-      body: operation !== TOOLS_PREFIX.QUERY ? JSON.stringify(data) : undefined
+      body:
+        operation !== TOOLS_PREFIX.QUERY
+          ? JSON.stringify(requestData)
+          : undefined
     }
 
     const response = await fetch(endpoint, options)
@@ -122,7 +137,7 @@ export const createTool = (config: ToolDefinition) => {
     finalTools[TOOLS_PREFIX.RECORD] = {
       name: TOOLS_PREFIX.RECORD + '_' + config.name,
       description: config.description,
-      fields: [...fields],
+      fields: [...config.fields],
       handler: async (args: any, client: any, sendNotification: any) => {
         console.log('工具参数:', args)
         const { createDatabase } = client
@@ -148,7 +163,12 @@ export const createTool = (config: ToolDefinition) => {
 
         // 如果配置了同步，则同步到后端
         if (tools[TOOLS_PREFIX.RECORD].syncToBackend) {
-          await syncToBackend(TOOLS_PREFIX.RECORD, tableName, insertParams)
+          await syncToBackend(
+            TOOLS_PREFIX.RECORD,
+            tableName,
+            fieldDefs,
+            insertParams
+          )
         }
 
         return {
@@ -168,7 +188,7 @@ export const createTool = (config: ToolDefinition) => {
     finalTools[TOOLS_PREFIX.UPDATE] = {
       name: TOOLS_PREFIX.UPDATE + '_' + config.name,
       description: `更新或创建 ${tableName} 表中的记录`,
-      fields: [...fields],
+      fields: [...config.fields],
       handler: async (args: any, client: any, sendNotification: any) => {
         const { createDatabase } = client
         const currentDb = await initDB(tableName, fieldDefs, createDatabase)
@@ -213,7 +233,12 @@ export const createTool = (config: ToolDefinition) => {
 
         // 如果配置了同步，则同步到后端
         if (tools[TOOLS_PREFIX.UPDATE].syncToBackend) {
-          await syncToBackend(TOOLS_PREFIX.UPDATE, tableName, updateParams)
+          await syncToBackend(
+            TOOLS_PREFIX.UPDATE,
+            tableName,
+            fieldDefs,
+            updateParams
+          )
         }
 
         return {
@@ -245,12 +270,6 @@ export const createTool = (config: ToolDefinition) => {
       ],
       handler: async (args: any, client: any, sendNotification: any) => {
         const { createDatabase } = client
-        const currentDb = await initDB(tableName, fieldDefs, createDatabase)
-
-        // 如果配置了同步，先从后端获取数据
-        if (tools[TOOLS_PREFIX.QUERY].syncToBackend) {
-          await syncToBackend(TOOLS_PREFIX.QUERY, tableName, {})
-        }
 
         const forbidden = /\b(delete|drop|update|insert|alter|truncate)\b/i
         if (!/^\s*select\b/i.test(args.sql) || forbidden.test(args.sql)) {
@@ -262,6 +281,17 @@ export const createTool = (config: ToolDefinition) => {
               }
             ]
           }
+        }
+
+        const currentDb = await initDB(tableName, fieldDefs, createDatabase)
+        // 如果配置了同步，先从后端获取数据
+        if (tools[TOOLS_PREFIX.QUERY].syncToBackend) {
+          await syncToBackend(
+            TOOLS_PREFIX.QUERY,
+            tableName,
+            fieldDefs,
+            args.sql
+          )
         }
 
         let result = [],
