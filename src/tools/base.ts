@@ -258,8 +258,7 @@ export const createTool = (config: ToolDefinition) => {
     finalTools[TOOLS_PREFIX.QUERY] = {
       name: TOOLS_PREFIX.QUERY + '_' + config.name,
       description: `通过自定义SQL语句查询数据库 ${tableName} 表,关键字段为 ${fieldNames.join(
-        ', '
-      )} ，用户ID为 ${globalThis.userId} ，设备ID为 ${globalThis.deviceId}`,
+        ', ')} ，用户ID为 ${globalThis.userId} ，设备ID为 ${globalThis.deviceId}`,
       fields: [
         {
           name: 'sql',
