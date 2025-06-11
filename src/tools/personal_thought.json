@@ -57,7 +57,7 @@
             "syncToBackend":true
         },
         "update":{
-            "active":true,
+            "active":false,
             "syncToBackend":true
         }
     }

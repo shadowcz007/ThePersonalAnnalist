@@ -1,0 +1,62 @@
+{
+    "name": "interview_host",
+    "description": "用于主持访谈的工具，能够发起提问，引导用户思考，基于用户的回答提问，挖掘有价值的信息，并记录访谈内容。",
+    "fields": [
+        {
+            "name": "interview_topic",
+            "type": "string",
+            "isOptional": false,
+            "description": "访谈的主题或焦点，用1-5个关键词概括（如‘AI伦理’ ‘创业决策’）"
+        },
+        {
+            "name": "questions",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "isOptional": false,
+            "description": "一系列预设的开放式问题，用于引导用户思考"
+        },
+        {
+            "name": "follow_up_questions",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "isOptional": true,
+            "description": "根据用户回答动态生成的跟进问题"
+        },
+        {
+            "name": "user_responses",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "isOptional": false,
+            "description": "用户对问题的回答，记录完整内容"
+        },
+        {
+            "name": "key_insights",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "isOptional": true,
+            "description": "从用户回答中提取的关键见解或有价值信息"
+        } 
+    ],
+    "tools": {
+        "query": {
+            "active": true,
+            "syncToBackend": true
+        },
+        "record": {
+            "active": false,
+            "syncToBackend": true
+        },
+        "update": {
+            "active": true,
+            "syncToBackend": true
+        }
+    }
+}
