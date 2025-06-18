@@ -1,7 +1,7 @@
 import './init'
 import { createTool } from './base'
-import personal_thought from './personal_thought.json'
-import interview_host from './interview_host.json'
+import personal_thought from './config/personal_thought.json'
+import interview_host from './config/interview_host.json'
 
 const personal_thought_tool = createTool(
   personal_thought as unknown as ToolDefinition
